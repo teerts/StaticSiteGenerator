@@ -5,7 +5,8 @@ class TextType(Enum):
     ITALIC_TEXT = "italictext"
     CODE_TEXT = "codetext"
     LINK_TEXT = "linktext" 
-    IMAGE_TEXT = "imagetext" 
+    IMAGE_TEXT = "imagetext"
+    TEXT = "text"
 
 class TextNode:
     def __init__(self, text, text_type, url = None): 
