@@ -1,5 +1,5 @@
 from textnode import TextType, TextNode
-from htmlnode import LeafNode
+from htmlnode import LeafNode, ParentNode
 import re
 from constants import BlockType
 
@@ -18,7 +18,7 @@ def text_node_to_html_node(text_node):
         return LeafNode("a", text_node.text, {"href": text_node.url})
     elif text_node.text_type == TextType.IMAGE_TEXT:
         if not hasattr(text_node, "url") or text_node.url is None:
-            raise ValueError("IMMAGE TextNode must have 'url' attribute.") 
+            raise ValueError("IMAGE TextNode must have 'url' attribute.") 
         return LeafNode("img", "", {"src": text_node.url, "alt": text_node.text}) 
     else: 
         raise ValueError(f"Unknown TextType: {text_node.text_type}")
@@ -135,13 +135,15 @@ def split_nodes_link(old_nodes):
 
     return new_nodes
 
-def text_to_textnodes(text):    
+def text_to_textnodes(text):
+    text = text.replace('\n', ' ')
+    
     nodes = [TextNode(text, TextType.TEXT)]
     
     nodes = split_nodes_image(nodes)   
     nodes = split_nodes_link(nodes)    
     nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD_TEXT)    
-    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC_TEXT)    
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC_TEXT)    # Changed from "_" to "*"
     nodes = split_nodes_delimiter(nodes, "`", TextType.CODE_TEXT)
 
     return nodes
@@ -184,6 +186,111 @@ def block_to_block_type(block):
         return BlockType.ORDERED_LIST    
     
     return BlockType.PARAGRAPH
+
+def markdown_to_html_node(markdown):    
+    blocks = markdown_to_blocks(markdown)    
+
+    block_nodes = []
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        html_node = block_to_html_node(block, block_type)
+        block_nodes.append(html_node)
+    
+    return ParentNode("div", block_nodes)
+
+def block_to_html_node(block, block_type):
+    if block_type == BlockType.HEADING:
+        return heading_to_html_node(block)
+    elif block_type == BlockType.CODE:
+        return code_to_html_node(block)
+    elif block_type == BlockType.QUOTE:
+        return quote_to_html_node(block)
+    elif block_type == BlockType.UNORDERED_LIST:
+        return unordered_list_to_html_node(block)
+    elif block_type == BlockType.ORDERED_LIST:
+        return ordered_list_to_html_node(block)
+    else:  
+        return paragraph_to_html_node(block)
+
+def heading_to_html_node(block):
+    level = 0
+    for char in block:
+        if char == '#':
+            level += 1
+        else:
+            break    
+
+    heading_text = block[level + 1:]    
+
+    tag = f"h{level}"
+    children = text_to_children(heading_text)
+    
+    return ParentNode(tag, children)
+
+def code_to_html_node(block):
+    lines = block.split('\n')
+    
+    if len(lines) >= 3:
+        code_content = '\n'.join(lines[1:-1])
+
+        if len(lines) > 2:
+            code_content += '\n'
+    else:
+        code_content = block[3:-3]  
+    text_node = TextNode(code_content, TextType.TEXT)
+    code_child = text_node_to_html_node(text_node)
+    
+    return ParentNode("pre", [ParentNode("code", [code_child])])
+
+def quote_to_html_node(block):
+    lines = block.split('\n')
+    quote_lines = []
+    for line in lines:
+        if line.startswith('> '):
+            quote_lines.append(line[2:])
+        elif line.startswith('>'):
+            quote_lines.append(line[1:])
+        else:
+            quote_lines.append(line)
+    
+    quote_text = '\n'.join(quote_lines)
+    children = text_to_children(quote_text)
+    
+    return ParentNode("blockquote", children)
+
+def unordered_list_to_html_node(block):
+    lines = block.split('\n')
+    list_items = []
+    
+    for line in lines:
+        item_text = line[2:] 
+        item_children = text_to_children(item_text)
+        list_item = ParentNode("li", item_children)
+        list_items.append(list_item)
+    
+    return ParentNode("ul", list_items)
+
+def ordered_list_to_html_node(block):
+    lines = block.split('\n')
+    list_items = []
+    
+    for i in range(len(lines)):
+        line = lines[i]
+        dot_index = line.find('. ')
+        item_text = line[dot_index + 2:] 
+        item_children = text_to_children(item_text)
+        list_item = ParentNode("li", item_children)
+        list_items.append(list_item)
+    
+    return ParentNode("ol", list_items)
+
+def paragraph_to_html_node(block):
+    children = text_to_children(block)
+    return ParentNode("p", children)
+
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    return [text_node_to_html_node(node) for node in text_nodes]
 
 
 
