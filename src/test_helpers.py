@@ -1,6 +1,7 @@
 import unittest 
-from helpers import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks
+from helpers import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks, block_to_block_type
 from textnode import TextNode, TextType
+from constants import BlockType
 
 class TestHelpers(unittest.TestCase): 
     def test_text(self):
@@ -269,6 +270,38 @@ Second paragraph also has spaces
         md = "\n\n\n\n"
         blocks = markdown_to_blocks(md)
         self.assertEqual(blocks, [])
+
+    def test_heading_single_hash(self):
+        """Test heading with single #"""
+        block = "# This is a heading"
+        self.assertEqual(block_to_block_type(block), BlockType.HEADING)
+    
+    def test_heading_multiple_hashes(self):
+        """Test headings with 2-6 # characters"""
+        test_cases = [
+            "## Level 2 heading",
+            "### Level 3 heading", 
+            "#### Level 4 heading",
+            "##### Level 5 heading",
+            "###### Level 6 heading"
+        ]
+        for block in test_cases:
+            self.assertEqual(block_to_block_type(block), BlockType.HEADING)
+    
+    def test_heading_invalid_no_space(self):
+        """Test that # without space is not a heading"""
+        block = "#Not a heading"
+        self.assertEqual(block_to_block_type(block), BlockType.PARAGRAPH)
+    
+    def test_heading_invalid_too_many_hashes(self):
+        """Test that more than 6 # characters is not a heading"""
+        block = "####### Too many hashes"
+        self.assertEqual(block_to_block_type(block), BlockType.PARAGRAPH)
+    
+    def test_code_block_simple(self):
+        """Test simple code block"""
+        block = "```\nprint('hello')\n```"
+        self.assertEqual(block_to_block_type(block), BlockType.CODE)
 
     
     
