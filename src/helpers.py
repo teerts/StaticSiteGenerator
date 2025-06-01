@@ -1,4 +1,4 @@
-from textnode import TextType
+from textnode import TextType, TextNode
 from htmlnode import LeafNode
 
 def text_node_to_html_node(text_node):
@@ -21,4 +21,35 @@ def text_node_to_html_node(text_node):
     else: 
         raise ValueError(f"Unknown TextType: {text_node.text_type}")
 
+def split_nodes_delimiter(old_nodes, delimiter, text_type):
+    new_nodes = [] 
+    for node in old_nodes:
+        if node.text == "":
+            return None
+
+        # Not a text type node 
+        if node.text_type != TextType.TEXT: 
+            new_nodes.append(node)
+            continue 
+
+        split_parts = node.text.split(delimiter) 
+
+        # No delimiter found based on split
+        if len(split_parts) == 1:
+            new_nodes.append(node)
+            continue 
+
+        # Unmatched delimiter 
+        if len(split_parts) % 2 == 0:
+            raise ValueError("Unmatched delimiter")        
+
+        for i in range(len(split_parts)):
+            split_part = split_parts[i] 
+            if split_part == "":
+                continue 
+            if i % 2 == 0: 
+                new_nodes.append(TextNode(split_part, TextType.TEXT))
+            else: 
+                new_nodes.append(TextNode(split_part, text_type))            
+    return new_nodes
 
