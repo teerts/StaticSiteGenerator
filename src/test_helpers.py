@@ -1,5 +1,15 @@
 import unittest 
-from helpers import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks, block_to_block_type, markdown_to_html_node
+from text_processing import (
+    text_node_to_html_node, 
+    split_nodes_delimiter, 
+    extract_markdown_images, 
+    extract_markdown_links, 
+    split_nodes_image, 
+    split_nodes_link, 
+    text_to_textnodes
+)
+from block_processing import markdown_to_blocks, block_to_block_type
+from markdown_parser import markdown_to_html_node
 from textnode import TextNode, TextType
 from constants import BlockType
 
@@ -334,10 +344,3 @@ the **same** even with inline stuff
             html,
             "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
         )
-
-    
-    
-
-
-    
-
