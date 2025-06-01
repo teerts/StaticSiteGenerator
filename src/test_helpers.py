@@ -1,5 +1,5 @@
 import unittest 
-from helpers import text_node_to_html_node, split_nodes_delimiter
+from helpers import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
 from textnode import TextNode, TextType
 
 class TestHelpers(unittest.TestCase): 
@@ -68,6 +68,18 @@ class TestHelpers(unittest.TestCase):
         node = TextNode("*The beginning* and the end*", TextType.TEXT)
         with self.assertRaises(ValueError):
             split_nodes_delimiter([node], "*", TextType.BOLD_TEXT)
+    
+    def test_extract_markdown_images(self):
+        matches = extract_markdown_images(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+    def test_extract_markdown_links(self):
+        matches = extract_markdown_links(
+            "This is text with a link [to website](https://www.test.com) and [to youtube](https://www.youtube.com/@test)"
+        )
+        self.assertListEqual([("to website", "https://www.test.com"), ("to youtube", "https://www.youtube.com/@test")], matches)
 
     
 
