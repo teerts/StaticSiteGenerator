@@ -26,7 +26,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = [] 
     for node in old_nodes:
         if node.text == "":
-            return None
+            continue
 
         # Not a text type node 
         if node.text_type != TextType.TEXT: 
@@ -75,9 +75,10 @@ def split_nodes_image(old_nodes):
     for node in old_nodes:
         text = node.text
         matches = extract_markdown_images(text)      
-
+        
         if not matches: 
-            return [node]
+            new_nodes.append(node)
+            continue 
         
         last_index = 0 
         for alt_text, url in matches: 
@@ -108,7 +109,8 @@ def split_nodes_link(old_nodes):
         matches = extract_markdown_links(text)      
 
         if not matches: 
-            return [node]
+            new_nodes.append(node)
+            continue 
         
         last_index = 0 
         for alt_text, url in matches: 
@@ -131,6 +133,34 @@ def split_nodes_link(old_nodes):
             new_nodes.append(TextNode(after_text, TextType.TEXT))       
 
     return new_nodes
+
+def text_to_textnodes(text):    
+    nodes = [TextNode(text, TextType.TEXT)]
+    
+    nodes = split_nodes_image(nodes)   
+    nodes = split_nodes_link(nodes)    
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD_TEXT)    
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC_TEXT)    
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE_TEXT)
+
+    return nodes
+
+def markdown_to_blocks(markdown):
+    blocks = markdown.split('\n\n')
+
+    blocks_result = []
+
+    for block in blocks: 
+        stripped_block = block.strip()
+
+        if stripped_block: 
+            blocks_result.append(stripped_block)
+
+    return blocks_result
+
+
+
+
 
 
 

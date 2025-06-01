@@ -1,5 +1,5 @@
 import unittest 
-from helpers import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
+from helpers import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks
 from textnode import TextNode, TextType
 
 class TestHelpers(unittest.TestCase): 
@@ -56,7 +56,7 @@ class TestHelpers(unittest.TestCase):
     def test_empty_text_node(self):
         node = TextNode("", TextType.TEXT)
         result = split_nodes_delimiter([node], "*", TextType.BOLD_TEXT)
-        self.assertEqual(result, None)
+        self.assertEqual(result, [])
 
     def test_only_delimiter(self):
         node = TextNode("*Bold Move*", TextType.TEXT)        
@@ -144,8 +144,133 @@ class TestHelpers(unittest.TestCase):
         node = TextNode("[A](http://a.com)", TextType.TEXT)
         result = split_nodes_link([node])        
         for n in result:
-            self.assertTrue(n.text != "")
+            self.assertTrue(n.text != "")    
 
+    def test_text_to_textnodes_boldtext(self):
+        text = "This is **bold** text."
+        result = text_to_textnodes(text)
+        expected = [TextNode("This is ", TextType.TEXT),
+                    TextNode("bold", TextType.BOLD_TEXT),
+                    TextNode(" text.", TextType.TEXT)]
+        self.assertEqual(result, expected)
+
+    def test_text_to_textnodes_image(self):
+        text = "Here is an ![alt](http://img.com) image."
+        result = text_to_textnodes(text)
+        expected = [TextNode("Here is an ", TextType.TEXT),
+                    TextNode("alt", TextType.IMAGE_TEXT, "http://img.com"),
+                    TextNode(" image.", TextType.TEXT)]
+        self.assertEqual(result, expected)
+
+    def test_text_to_textnodes_link(self):
+        text = "Go to [site](https://example.com) now."
+        result = text_to_textnodes(text)
+        expected = [TextNode("Go to ", TextType.TEXT),
+                    TextNode("site", TextType.LINK_TEXT, "https://example.com"),
+                    TextNode(" now.", TextType.TEXT)]
+        self.assertEqual(result, expected)
+
+    def test_text_to_textnodes_multiple_images_and_links(self):
+        text = "![a](a.png) and [b](b.com) and ![c](c.png)"
+        result = text_to_textnodes(text)
+        expected = [TextNode("", TextType.TEXT),
+            TextNode("a", TextType.IMAGE_TEXT, "a.png"),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("b", TextType.LINK_TEXT, "b.com"),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("c", TextType.IMAGE_TEXT, "c.png")        ]
+        
+        expected = [n for n in expected if not (n.text == "" and n.text_type == TextType.TEXT)]
+        result = [n for n in result if not (n.text == "" and n.text_type == TextType.TEXT)]
+
+        self.assertEqual(result, expected)
+
+    def test_text_to_textnodes_all(self):
+        text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://google.com)"
+        result = text_to_textnodes(text)
+        expected = [TextNode("This is ", TextType.TEXT),
+                    TextNode("text", TextType.BOLD_TEXT),
+                    TextNode(" with an ", TextType.TEXT),
+                    TextNode("italic", TextType.ITALIC_TEXT),
+                    TextNode(" word and a ", TextType.TEXT),
+                    TextNode("code block", TextType.CODE_TEXT),
+                    TextNode(" and an ", TextType.TEXT),
+                    TextNode("obi wan image", TextType.IMAGE_TEXT, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                    TextNode(" and a ", TextType.TEXT),
+                    TextNode("link", TextType.LINK_TEXT, "https://google.com"),]
+        
+        self.assertEqual(result, expected)
+
+    def test_markdown_to_blocks(self):
+        md = """
+This is **bolded** paragraph
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items
+"""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+
+    def test_markdown_to_blocks_single_block(self):
+        """Test with a single block (no double newlines)"""
+        md = "This is just one paragraph with no breaks."
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["This is just one paragraph with no breaks."])
+
+    def test_markdown_to_blocks_excessive_newlines(self):
+        """Test with excessive newlines between blocks"""
+        md = """First paragraph
+
+
+Second paragraph
+
+
+
+Third paragraph"""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "First paragraph",
+                "Second paragraph",
+                "Third paragraph",
+            ],
+        )
+
+    def test_markdown_to_blocks_whitespace_handling(self):
+        """Test that leading/trailing whitespace is stripped from blocks"""
+        md = """   First paragraph with leading spaces   
+
+Second paragraph also has spaces  
+
+    Third paragraph too    """
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "First paragraph with leading spaces",
+                "Second paragraph also has spaces",
+                "Third paragraph too",
+            ],
+        )
+
+    def test_markdown_to_blocks_only_newlines(self):
+        """Test with string containing only newlines"""
+        md = "\n\n\n\n"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, [])
+
+    
     
 
 
