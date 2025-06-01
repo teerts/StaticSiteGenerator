@@ -69,3 +69,71 @@ def extract_markdown_links(text):
     matches = re.findall(pattern, text)
     
     return matches
+
+def split_nodes_image(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        text = node.text
+        matches = extract_markdown_images(text)      
+
+        if not matches: 
+            return [node]
+        
+        last_index = 0 
+        for alt_text, url in matches: 
+            markdown_string = f"![{alt_text}]({url})"
+            start = text.find(markdown_string, last_index)
+            end = start + len(markdown_string)
+
+            before_text = text[last_index:start]
+
+            if before_text:
+                new_nodes.append(TextNode(before_text, TextType.TEXT))
+
+            new_nodes.append(TextNode(alt_text, TextType.IMAGE_TEXT, url))
+
+            last_index = end 
+
+        after_text = text[last_index:]
+
+        if after_text:
+            new_nodes.append(TextNode(after_text, TextType.TEXT))       
+
+    return new_nodes
+
+def split_nodes_link(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        text = node.text
+        matches = extract_markdown_links(text)      
+
+        if not matches: 
+            return [node]
+        
+        last_index = 0 
+        for alt_text, url in matches: 
+            markdown_string = f"[{alt_text}]({url})"
+            start = text.find(markdown_string, last_index)
+            end = start + len(markdown_string)
+
+            before_text = text[last_index:start]
+
+            if before_text:
+                new_nodes.append(TextNode(before_text, TextType.TEXT))
+
+            new_nodes.append(TextNode(alt_text, TextType.LINK_TEXT, url))
+
+            last_index = end 
+
+        after_text = text[last_index:]
+
+        if after_text:
+            new_nodes.append(TextNode(after_text, TextType.TEXT))       
+
+    return new_nodes
+
+
+
+
+
+
