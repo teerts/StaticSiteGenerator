@@ -65,22 +65,43 @@ def generate_page(from_path, template_path, dest_path):
     
     print(f"Page generated successfully: {dest_path}")
 
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    print(f"\nScanning directory: {dir_path_content}")
+    
+    for item in os.listdir(dir_path_content):
+        item_path = os.path.join(dir_path_content, item)
+        
+        if os.path.isfile(item_path) and item_path.endswith('.md'):
+            relative_path = os.path.relpath(item_path, dir_path_content)
+            
+            if os.path.basename(relative_path) == 'index.md':
+                dest_path = os.path.join(dest_dir_path, relative_path)
+                dest_path = dest_path.replace('.md', '.html')
+            else:
+                path_without_ext = relative_path[:-3]
+                dest_path = os.path.join(dest_dir_path, path_without_ext, 'index.html')
+            
+            print(f"Processing: {item_path} -> {dest_path}")
+            generate_page(item_path, template_path, dest_path)
+        
+        elif os.path.isdir(item_path):            
+            generate_pages_recursive(item_path, template_path, os.path.join(dest_dir_path, item))
+
+
 def main():
     print("Starting static site generation...")
     
     source_dir = "static"
     destination_dir = "public"
+    content_dir = "content"
+    template_path = "template.html"
     
     try:
         print(f"\nStep 1: Copying static files from '{source_dir}' to '{destination_dir}'...")
         copy_directory_recursive(source_dir, destination_dir)
         
-        print(f"\nStep 2: Generating pages...")
-        generate_page(
-            from_path="content/index.md",
-            template_path="template.html",
-            dest_path="public/index.html"
-        )
+        print(f"\nStep 2: Generating pages from '{content_dir}'...")
+        generate_pages_recursive(content_dir, template_path, destination_dir)
         
         print("\nStatic site generation complete!")
         
