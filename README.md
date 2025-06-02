@@ -1,6 +1,6 @@
 # 🚀✨ Static Site Generator ✨🚀
 
-A simple, extensible static site generator written in Python. 🐍📄
+A simple, extensible static site generator which converts markdown files into a HTML website. Written in Python. 🐍📄
 
 ---
 
