@@ -18,9 +18,28 @@ A simple, extensible static site generator written in Python. 🐍📄
 4. **Build Locally using main.sh**  
 Output is in `docs/`.
 
-5. **Build for GitHub Pages:**  or **Navigate to your local webserver**
-For GitHub: Edit `build.sh` with your repo name -> Push built contents. 
-For local web server: https://{yourip}:{port}/{destinationfolder}
+5. **Build & Preview Your Site:**
 
-6. Go to https://USERNAME.github.io/REPONAME/ (i.e https://teerts.github.io/StaticSiteGenerator/)
+   - **For GitHub Pages:**  
+     1. Edit `build.sh` and set your repo name:  
+        ```
+        python3 src/main.py "/YOUR_REPO_NAME/"
+        ```
+     2. Run the script:  
+        ```
+        ./build.sh
+        ```
+     3. Push the contents of the `docs/` folder to your repository’s main branch.
+     4. In your GitHub repo settings, set Pages to serve from `/docs`.
+     5. Go to https://USERNAME.github.io/REPONAME/ (i.e https://teerts.github.io/StaticSiteGenerator/)
+
+   - **For Local Web Server:**  
+     1. After building, serve the `docs/` folder with your favorite web server.  
+     2. Open in your browser:  
+        ```
+        http://{your-ip}:{port}/docs/
+        ```
+
+
+
 
