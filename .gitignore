@@ -19,7 +19,7 @@ ENV/
 Thumbs.db
 
 # Generated site output
-public/
+#public/
 
 # Python egg files
 *.egg-info/
